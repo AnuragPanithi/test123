@@ -1,12 +1,18 @@
 <template>
 
-  <q-page>
+  <q-page class="relative-postion">
 
-    <div class="q-py-lg q-px-md row items-end q-col-gutter-md">
+    <q-scroll-area class="absolute full-width full-height">
 
-      <div class="col">
+      <div class="q-py-lg q-px-md row items-end q-col-gutter-md">
 
-        <q-input
+        <div class="col">
+
+          <q-input
+
+            bottom-slots
+
+            class="new-qweet"
 
             v-model="newQweetContent"
 
@@ -16,33 +22,27 @@
 
             maxlength="280"
 
-            botton-slots
+            :dense="dense"
 
             autogrow
 
-            class="new-queet"
+          >
 
-        >
+            <template v-slot:before>
 
-        <template v-slot:before>
+              <q-avatar size="">
 
-          <q-avatar size="xl">
+                <img src="https://cdn.quasar.dev/img/avatar5.jpg">
 
-          <img src="https:/cdn.quasar.dev/img/avatar5.jpg">
+              </q-avatar>
 
-        </q-avatar>
+            </template>
 
-        </template>
+          </q-input>
 
+        </div>
 
-
-        </q-input>
-
-      </div>
-
-
-
-      <div class="col col-shrink">
+        <div class="col col-shrink">
 
           <q-btn
 
@@ -58,131 +58,155 @@
 
             color="primary"
 
-            label="Queet"
+            label="Qweet"
 
-            no-caps />
+            no-caps
+
+          />
+
+        </div>
 
       </div>
 
-    </div>
+      <q-separator
 
-    <q-separator size="10px" color="grey-2" class="divider" />
+        class="divider"
+
+        size="10px"
+
+        color="grey-2"
+
+      />
+
+      <q-list separator>
+
+        <transition-group
+
+          appear
+
+          enter-active-class="animated fadeIn slow"
+
+          leave-active-class="animated fadeOut slow"
+
+        >
+
+          <q-item
+
+            v-for="qweet in qweets"
+
+            :key="qweet.id"
+
+            class="qweet q-py-md"
+
+            >
+
+            <q-item-section avatar top>
+
+              <q-avatar>
+
+                <img src="https://cdn.quasar.dev/img/avatar5.jpg">
+
+              </q-avatar>
+
+            </q-item-section>
 
 
 
-    <q-list separator>
+            <q-item-section>
 
-        <q-item
+              <q-item-label class="text-subtitle1">
 
-          v-for="qweet in qweets"
+                <strong>George Royce</strong>
 
-          :key="qweet.date"
+                <span class="text-grey-7">
 
-          class="q-py-md">
+                @manizha_salomova
 
+                <br class="lt-md">&bull; {{qweet.date | relativeDate}}
 
+                </span>
 
-           <q-item-section avatar top>
+              </q-item-label>
 
-            <q-avatar>
+              <q-item-label class="qweet-content text-body1">
 
-              <img src="https:/cdn.quasar.dev/img/avatar5.jpg">
+                  {{qweet.content}}
 
-            </q-avatar>
+              </q-item-label>
 
-          </q-item-section>
-
-
-
-          <q-item-section>
-
-            <q-item-label><strong> George Royce </strong>  </q-item-label>
-
-             <q-item-label class="qweet-content"> {{ qweet.content}}
-
-            </q-item-label>
-
-              <div class="row justify-between q-mt-sm">
+              <div class="qweet-icons row justify-between q-mt-sm">
 
                 <q-btn
 
-                  flat
+                flat
 
-                  round
+                round
 
-                  color="gray"
+                color="grey"
 
-                  icon="far fa-comment"/>
+                icon="far fa-comment"
 
+                size="sm"
 
+                />
 
-                 <q-btn
+                <q-btn
 
-                  flat
+                flat
 
-                  round
+                round
 
-                  color="gray"
+                color="grey"
 
-                  icon="fas fa-retweet"/>
+                icon="fas fa-retweet"
 
+                size="sm"
 
+                />
 
-                   <q-btn
+                <q-btn
 
-                  flat
+                @click="toggleLiked(qweet)"
 
-                  round
+                flat
 
-                  color="gray"
+                round
 
-                  icon="far fa-heart"/>
+                :color="qweet.liked ? 'pink' : 'gray'"
 
+                :icon="qweet.liked ? 'fas  fa-heart' : 'far fa-heart'"
 
+                size="sm"
 
-                   <q-btn
+                />
 
-                  flat
+                <q-btn
 
-                  round
+                @click="deleteQweet(qweet)"
 
-                  color="gray"
+                flat
 
-                  icon="fas fa-trash"/>
+                round
 
+                color="grey"
 
+                icon="fas fa-trash"
 
+                size="sm"
 
+                />
 
+              </div>
 
+            </q-item-section>
 
+          </q-item>
 
+          </transition-group>
 
+      </q-list>
 
-
-            </div>
-
-          </q-item-section>
-
-          <q-item-section side top>
-
-            {{ qweet.date}}
-
-
-
-          </q-item-section>
-
-
-
-
-
-        </q-item>
-
-    </q-list>
-
-
-
-
+    </q-scroll-area>
 
   </q-page>
 
@@ -191,6 +215,12 @@
 
 
 <script>
+
+import db from 'src/boot/firebase'
+
+import { formatDistance } from 'date-fns'
+
+
 
 export default {
 
@@ -204,21 +234,31 @@ export default {
 
       qweets: [
 
-                {
+                //  {
 
-                  content:  'There are two primary choices in life: to accept conditions as they exist, or accept the responsibility for changing them',
+                //    id: 'ID1',
 
-                  date: 1635627999211
+                //    content:  'There are two primary choices in life: to accept conditions as they exist, or accept the responsibility for changing them',
 
-                },
+                //    date: 1635627999211,
 
-                {
+                //    liked: false
 
-                  content:  'Aerodynamically the bumblebee shouldnt be able to fly but the bumblebee doesnt know that so it goes on flying anyway',
 
-                  date: 1635628100512
 
-                },
+                // },
+
+                //  {
+
+                //    id: 'ID2',
+
+                //    content:  'Aerodynamically the bumblebee shouldnt be able to fly but the bumblebee doesnt know that so it goes on flying anyway',
+
+                //    date: 1635628100512,
+
+                //    liked: true
+
+                // },
 
               ]
 
@@ -228,10 +268,6 @@ export default {
 
   },
 
-
-
-
-
   methods:{
 
     addNewQweet() {
@@ -240,19 +276,119 @@ export default {
 
         content: this.newQweetContent,
 
-        date: Date.now()
+        date: Date.now(),
+
+        liked: false
 
       }
 
-      this.qweets.unshift(newQweet)
+      //this.qweets.unshift(newQweet)
+
+       db.collection('qweets').add(newQweet).then((docRef) => {
+
+          console.log('Document written with ID: ', docRef.id)
+
+        }).catch((error) => {
+
+          console.error('Error adding document: ', error)
+
+        })
+
+        this.newQweetContent = ''
+
+    },
+
+    deleteQweet(qweet){
+
+      db.collection('qweets').doc(qweet.id).delete().then(function() {
+
+          console.log('Document successfully deleted!')
+
+        }).catch((error) => {
+
+          console.error('Error removing document: ', error)
+
+        })
+
+    },
+
+    toggleLiked(qweet) {
+
+      db.collection('qweets').doc(qweet.id).update({
+
+        liked: !qweet.liked
+
+      })
+
+      .then(function() {
+
+        console.log('Document successfully update!')
+
+      })
+
+      .catch(function(error) {
+
+        console.error('Error updating document: ', error)
+
+      })
+
+    }
+
+  },
+
+  filters: {
+
+    relativeDate(value){
+
+      return formatDistance(value, new Date())
+
+    }
+
+  },
+
+  mounted() {
+
+    db.collection('qweets').orderBy('date').onSnapshot(snapshot => {
+
+          snapshot.docChanges().forEach(change => {
+
+            let qweetChange = change.doc.data()
+
+            qweetChange.id = change.doc.id
+
+              if (change.type === 'added') {
+
+                console.log('New qweet: ', qweetChange)
+
+                this.qweets.unshift(qweetChange)
+
+              }
+
+              if (change.type === 'modified') {
+
+                console.log('Modified qweet: ', qweetChange)
+
+                let index = this.qweets.findIndex(qweet => qweet.id === qweetChange.id)
+
+                Object.assign(this.qweets[index], qweetChange)
+
+              }
+
+              if (change.type === 'removed') {
+
+                console.log('Removed qweet: ', qweetChange)
+
+                let index = this.qweets.findIndex(qweet => qweet.id === qweetChange.id)
+
+                this.qweets.splice(index, 1)
+
+              }
+
+          })
+
+    })
 
   }
-
-
-
-  }
-
-
 
 }
 
@@ -268,6 +404,8 @@ export default {
 
     border-bottom: 1px solid
 
+    border-color: grey-4
+
 
 
   .new-qweet
@@ -278,7 +416,7 @@ export default {
 
       line-height: 1.4 !important
 
-      border-color: grey
+      border-color: grey-4
 
   .qweet-content
 
@@ -286,6 +424,16 @@ export default {
 
 
 
+  .qweet-icons
+
+    margin-left: -5px
+
+
+
+  .qweet:not(:first-child)
+
+   border-top: 1px solid rgba(0, 0 , 0, 0.12)
+
+
+
 </style>
-
-
